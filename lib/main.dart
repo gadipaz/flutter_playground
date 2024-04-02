@@ -1,68 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_playground/actions/actions.dart';
+import 'package:flutter_playground/models/app_state.dart';
+import 'package:flutter_playground/reducers/app_reducer.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:redux/redux.dart';
 
 void main() {
-  runApp(const MyApp());
+  final store = Store<AppState>(
+    appReducer,
+    initialState: const AppState(reduxSetup: false),
+  );
+
+  print('The initials state is: ${store.state}');
+
+  runApp(StoreProvider(store: store, child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Playground',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: Colors.blueGrey,
       ),
-      home: const MyHomePage(title: 'Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Playground App'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
-    );
+        body: StoreConnector<AppState, bool>(
+          converter: (Store<AppState> store) => store.state.reduxSetup,
+          builder: (BuildContext context, bool reduxSetup) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Text('Redux is working: $reduxSetup'),
+                  ElevatedButton(
+                    child: Text('Dispatch the action'),
+                    onPressed: () => StoreProvider.of<AppState>(context)
+                        .dispatch(SomeAction(!reduxSetup)),
+                  ),
+                ],
+              ),
+            );
+          },
+      )
+    ));
   }
 }
